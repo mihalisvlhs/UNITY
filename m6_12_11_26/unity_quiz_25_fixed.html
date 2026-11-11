@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Γνώσεων Unity & C#</title>
+  <style>
+    :root {
+      --bg: #18191c;
+      --card-bg: #22252a;
+      --card-border: #353941;
+      --accent: #3a86ff;
+      --accent-hover: #2563eb;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --correct: #22c55e;
+      --correct-bg: rgba(34, 197, 94, 0.15);
+      --wrong: #ef4444;
+      --wrong-bg: rgba(239, 68, 68, 0.15);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 30px 15px;
+      display: flex;
+      justify-content: center;
+    }
+    .wrapper {
+      max-width: 840px;
+      width: 100%;
+    }
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    h1 {
+      color: var(--accent);
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+    #score-box {
+      display: none;
+      background: var(--card-bg);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 25px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(58, 134, 255, 0.25);
+    }
+    .score-num {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin: 10px 0;
+    }
+    .score-msg {
+      font-size: 1.15rem;
+      color: var(--text);
+    }
+    .question-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 20px;
+      transition: border-color 0.2s ease;
+    }
+    .question-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .q-badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.85rem;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    .options-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .opt-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .opt-label:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--accent);
+    }
+    .opt-label input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .explanation {
+      display: none;
+      margin-top: 15px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 4px solid var(--accent);
+    }
+    .is-correct-card {
+      border-color: var(--correct) !important;
+    }
+    .is-wrong-card {
+      border-color: var(--wrong) !important;
+    }
+    .opt-correct-highlight {
+      background: var(--correct-bg) !important;
+      border-color: var(--correct) !important;
+      color: #86efac;
+      font-weight: 600;
+    }
+    .opt-wrong-highlight {
+      background: var(--wrong-bg) !important;
+      border-color: var(--wrong) !important;
+      color: #fca5a5;
+    }
+    .buttons-bar {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin: 30px 0 50px 0;
+    }
+    button {
+      cursor: pointer;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    .btn-submit {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-submit:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+    .btn-reset {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+    }
+    .btn-reset:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <header>
+    <h1>Quiz Γνώσεων Unity 2D/3D & C#</h1>
+    <p>25 Ερωτήσεις βασισμένες στις εργαστηριακές ασκήσεις (Editor, Hierarchy, Scripts, Φυσική & UI)</p>
+  </header>
+
+  <div id="score-box">
+    <h2>Τελικό Αποτέλεσμα</h2>
+    <div class="score-num" id="score-text">0 / 25</div>
+    <div class="score-msg" id="score-desc"></div>
+  </div>
+
+  <form id="quiz-form">
+    <div id="questions-list"></div>
+
+    <div class="buttons-bar">
+      <button type="button" class="btn-submit" onclick="gradeQuiz()">Υποβολή & Έλεγχος Απαντήσεων</button>
+      <button type="button" class="btn-reset" onclick="resetForm()">Επαναφορά</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const quizQuestions = [
+  {
+    question: "Πώς εισάγουμε έναν νέο κύβο (Player) στη σκηνή από το παράθυρο Hierarchy;",
+    choices: [
+      "Δεξί κλικ στο Hierarchy > 3D Object > Cube",
+      "Δεξί κλικ στο Project > Create > Material",
+      "File > New Cube",
+      "Window > Layouts > 3D Object"
+    ],
+    answer: 0,
+    explanation: "Στο Hierarchy κάνουμε δεξί κλικ στο κενό > 3D Object > Cube (ή από το μενού GameObject > 3D Object > Cube)."
+  },
+  {
+    question: "Τι περιέχει το παράθυρο Project στο περιβάλλον του Unity;",
+    choices: [
+      "Μόνο τα ενεργά αντικείμενα της τρέχουσας σκηνής",
+      "Όλους τους φακέλους και τα αρχεία του έργου (Assets, C# Scripts, Materials, Εικόνες, Ήχους)",
+      "Τις ρυθμίσεις της μηχανής γραφικών και του λειτουργικού συστήματος",
+      "Την οπτική γωνία της κάμερας του παίκτη"
+    ],
+    answer: 1,
+    explanation: "Το παράθυρο Project λειτουργεί ως διαχειριστής αρχείων (Assets) του έργου σας."
+  },
+  {
+    question: "Τι εμφανίζεται στο παράθυρο Inspector;",
+    choices: [
+      "Μόνο τα μηνύματα λάθους και η κονσόλα",
+      "Όλες οι ιδιότητες, τα Components (π.χ. Transform, Collider) και οι ρυθμίσεις του επιλεγμένου αντικειμένου",
+      "Η λίστα με τα προγράμματα που είναι εγκατεστημένα στα Windows",
+      "Τα αρχεία που περιέχονται στο φάκελο Scenes"
+    ],
+    answer: 1,
+    explanation: "Ο Inspector προβάλλει τα επιμέρους Components και τις παραμέτρους του GameObject που έχουμε επιλέξει."
+  },
+  {
+    question: "Ποια συντεταγμένη του Transform (Position) πρέπει να αυξήσουμε για να κινηθεί ένα αντικείμενο προς τα δεξιά;",
+    choices: [
+      "Τη συντεταγμένη X",
+      "Τη συντεταγμένη Y",
+      "Τη συντεταγμένη Z",
+      "Τη συντεταγμένη W"
+    ],
+    answer: 0,
+    explanation: "Ο άξονας X αντιπροσωπεύει την οριζόντια κατεύθυνση (θετικές τιμές = δεξιά, αρνητικές = αριστερά)."
+  },
+  {
+    question: "Ποια συντεταγμένη του Transform (Position) μεταβάλλουμε για να αλλάξουμε το κατακόρυφο ύψος (πάνω / κάτω);",
+    choices: [
+      "Τη συντεταγμένη X",
+      "Τη συντεταγμένη Y",
+      "Τη συντεταγμένη Z",
+      "Το Scale X"
+    ],
+    answer: 1,
+    explanation: "Ο άξονας Y ελέγχει την κατακόρυφη κίνηση και το ύψος στον τρισδιάστατο και δισδιάστατο χώρο."
+  },
+  {
+    question: "Τι βλέπουμε στο παράθυρο Hierarchy;",
+    choices: [
+      "Τη λίστα με όλα τα ενεργά GameObjects που υπάρχουν στην τρέχουσα σκηνή",
+      "Τους φακέλους του σκληρού δίσκου C:",
+      "Μόνο τα script αρχεία C#",
+      "Τις διαστάσεις της οθόνης σε pixel"
+    ],
+    answer: 0,
+    explanation: "Το Hierarchy απεικονίζει όλα τα αντικείμενα (GameObjects, Lights, Cameras, Canvases) που συνθέτουν τη σκηνή."
+  },
+  {
+    question: "Από ποια βασική κλάση κληρονομούν όλα τα C# scripts που προσαρτώνται ως components σε GameObjects;",
+    choices: [
+      "MonoBehaviour",
+      "GameController",
+      "UnityBaseClass",
+      "ScriptableEntity"
+    ],
+    answer: 0,
+    explanation: "Η MonoBehaviour είναι η θεμελιώδης κλάση από την οποία κληρονομεί κάθε script που μπαίνει ως component στο Unity."
+  },
+  {
+    question: "Ποια συνάρτηση κύκλου ζωής εκτελείται μία φορά, μόλις δημιουργηθεί το component (πριν την πρώτη Start και Update);",
+    choices: [
+      "Awake()",
+      "Update()",
+      "FixedUpdate()",
+      "LateUpdate()"
+    ],
+    answer: 0,
+    explanation: "Η Awake() καλείται πρώτη απ' όλες τις μεθόδους κατά την αρχικοποίηση του αντικειμένου."
+  },
+  {
+    question: "Ποια μέθοδος καλείται αυτόματα σε κάθε frame και είναι ιδανική για ανάγνωση πλήκτρων (inputs);",
+    choices: [
+      "Start()",
+      "Update()",
+      "FixedUpdate()",
+      "OnDestroy()"
+    ],
+    answer: 1,
+    explanation: "Η Update() τρέχει μία φορά σε κάθε rendered frame, κάνοντάς την ιδανική για διαρκή έλεγχο inputs και κίνησης."
+  },
+  {
+    question: "Για υπολογισμούς φυσικής και εφαρμογή δυνάμεων σε Rigidbody / Rigidbody2D, ποια συνάρτηση συνιστάται;",
+    choices: [
+      "FixedUpdate()",
+      "LateUpdate()",
+      "Awake()",
+      "Start()"
+    ],
+    answer: 0,
+    explanation: "Η FixedUpdate() εκτελείται σε σταθερά χρονικά διαστήματα (fixed delta time), γεγονός απαραίτητο για ομαλή προσομοίωση φυσικής."
+  },
+  {
+    question: "Ποιο Component προσθέτουμε σε ένα αντικείμενο για να αποκτήσει μάζα και να επηρεάζεται από τη βαρύτητα;",
+    choices: [
+      "Rigidbody (ή Rigidbody2D)",
+      "MeshRenderer",
+      "CanvasRenderer",
+      "AudioSource"
+    ],
+    answer: 0,
+    explanation: "Το Rigidbody / Rigidbody2D επιτρέπει στη μηχανή φυσικής (Physics Engine) να ασκεί βαρύτητα και δυνάμεις στο σώμα."
+  },
+  {
+    question: "Πώς δημιουργούμε ένα 2D αντικείμενο τετραγώνου (Square) από το Hierarchy;",
+    choices: [
+      "Δεξί κλικ > 2D Object > Sprites > Square",
+      "Δεξί κλικ > 3D Object > Cube",
+      "Δεξί κλικ > UI > Image",
+      "Edit > Add 2D Square"
+    ],
+    answer: 0,
+    explanation: "Στο Hierarchy επιλέγουμε 2D Object > Sprites > Square."
+  },
+  {
+    question: "Τι τιμή επιστρέφει η Input.GetAxisRaw('Horizontal') όταν πατάμε το πλήκτρο D ή το δεξί βέλος;",
+    choices: [
+      "1",
+      "-1",
+      "0",
+      "10"
+    ],
+    answer: 0,
+    explanation: "Για θετική οριζόντια κίνηση (Δεξί βέλος / D) επιστρέφει 1, για αριστερά -1, και όταν δεν πατιέται τίποτα 0."
+  },
+  {
+    question: "Γιατί πολλαπλασιάζουμε την ταχύτητα μετακίνησης με το Time.deltaTime;",
+    choices: [
+      "Για να διπλασιαστούν τα frames ανά δευτερόλεπτο (FPS)",
+      "Για να είναι η ταχύτητα ομαλή και ανεξάρτητη από το ρυθμό ανανέωσης (FPS) του υπολογιστή",
+      "Για να καταστραφεί το αντικείμενο μετά από 1 δευτερόλεπτο",
+      "Για να λειτουργούν οι ήχοι του παιχνιδιού"
+    ],
+    answer: 1,
+    explanation: "Το Time.deltaTime εκφράζει το χρόνο σε δευτερόλεπτα από το προηγούμενο frame, προσφέροντας σταθερή κίνηση ανά δευτερόλεπτο σε κάθε PC."
+  },
+  {
+    question: "Πώς δημιουργούμε ένα νέο Material στο Unity για να χρωματίσουμε ένα αντικείμενο;",
+    choices: [
+      "Δεξί κλικ στο Project (Assets) > Create > Material",
+      "Δεξί κλικ στο Hierarchy > New Material",
+      "Edit > Colors > New",
+      "Window > Rendering > Color Palette"
+    ],
+    answer: 0,
+    explanation: "Τα Materials αποθηκεύονται ως αρχεία: Δεξί κλικ στο Project > Create > Material και κατόπιν επιλέγουμε χρώμα στο Albedo."
+  },
+  {
+    question: "Πώς συνδέουμε ένα C# Script σε ένα GameObject;",
+    choices: [
+      "Με drag-and-drop του script από το Project πάνω στο αντικείμενο (στο Hierarchy ή στον Inspector)",
+      "Πατώντας File > Save As στο Visual Studio",
+      "Γράφοντας το όνομα του GameObject μέσα στο script",
+      "Μέσω του μενού Window > Package Manager"
+    ],
+    answer: 0,
+    explanation: "Σέρνουμε το script από το Project πάνω στο GameObject ή πατάμε Add Component στον Inspector του αντικειμένου."
+  },
+  {
+    question: "Ποια είναι η συντόμευση πληκτρολογίου για άμεσο διπλασιασμό / αντιγραφή (duplicate) ενός επιλεγμένου αντικειμένου;",
+    choices: [
+      "Ctrl + D",
+      "Ctrl + C",
+      "Alt + D",
+      "Shift + D"
+    ],
+    answer: 0,
+    explanation: "Η συντόμευση Ctrl + D (ή Cmd + D σε Mac) δημιουργεί άμεσα κλώνο του επιλεγμένου GameObject στη σκηνή."
+  },
+  {
+    question: "Ποια δήλωση using είναι απαραίτητο να υπάρχει στην κορυφή του C# script για τη χρήση του TextMeshPro;",
+    choices: [
+      "using TMPro;",
+      "using UnityEngine.Text;",
+      "using System.Drawing;",
+      "using Unity.TextMesh;"
+    ],
+    answer: 0,
+    explanation: "Για να αναγνωριστούν κλάσεις όπως το TextMeshProUGUI απαιτείται η οδηγία: using TMPro;"
+  },
+  {
+    question: "Τι συμβαίνει όταν σε έναν Collider ενεργοποιήσουμε (τσεκάρουμε) την επιλογή 'Is Trigger';",
+    choices: [
+      "Το αντικείμενο γίνεται αόρατο",
+      "Το Collider μετατρέπεται σε ζώνη ανίχνευσης που επιτρέπει τη διέλευση (overlap) χωρίς φυσική αντίσταση/πρόσκρουση",
+      "Το αντικείμενο αποκτά αυτόματα άπειρη μάζα",
+      "Το αντικείμενο διαγράφεται αυτόματα από τη μνήμη"
+    ],
+    answer: 1,
+    explanation: "Ένα trigger collider ανιχνεύει την είσοδο άλλων σωμάτων χωρίς να προκαλεί φυσική αναπήδηση ή εμπόδιο."
+  },
+  {
+    question: "Ποια μέθοδος καλείται αυτόματα όταν ένα σώμα εισέλθει σε έναν δισδιάστατο trigger collider (π.χ. συλλογή νομίσματος);",
+    choices: [
+      "OnTriggerEnter2D(Collider2D collision)",
+      "OnCollisionStay2D()",
+      "OnBecameVisible()",
+      "OnTriggerExit()"
+    ],
+    answer: 0,
+    explanation: "Όταν ενεργοποιηθεί trigger σύγκρουση σε 2D, καλείται η μέθοδος OnTriggerEnter2D."
+  },
+  {
+    question: "Ποια εντολή C# χρησιμοποιούμε για να καταστρέψουμε/διαγράψουμε ένα GameObject (π.χ. όταν συλλεχθεί ένα νόμισμα);",
+    choices: [
+      "Destroy(gameObject);",
+      "Delete(gameObject);",
+      "Remove(gameObject);",
+      "Clear.Current();"
+    ],
+    answer: 0,
+    explanation: "Η μέθοδος Destroy(gameObject) απομακρύνει οριστικά το αντικείμενο από τη σκηνή και τη μνήμη."
+  },
+  {
+    question: "Πού δηλώνουμε τη μέθοδο που θέλουμε να εκτελείται όταν πατιέται ένα UI Button;",
+    choices: [
+      "Στη λίστα συμβάντων On Click () του Button component στον Inspector",
+      "Στο Transform Rotation",
+      "Στις ρυθμίσεις της Κάμερας",
+      "Στο παράθυρο Console"
+    ],
+    answer: 0,
+    explanation: "Στο Button Component στον Inspector, πατάμε το + στη λίστα On Click () και συνδέουμε το αντικείμενο και τη μέθοδο."
+  },
+  {
+    question: "Αν αλλάξουμε μια public μεταβλητή στον κώδικα C# και έχει ήδη οριστεί άλλη τιμή στον Inspector, ποια τιμή θα ισχύσει στο Play Mode;",
+    choices: [
+      "Η τιμή του Inspector (Αρχείο Σκηνής)",
+      "Η αρχική τιμή του κώδικα C#",
+      "Η τιμή μηδενίζεται αυτόματα",
+      "Η Unity βγάζει σφάλμα κατά την εκτέλεση"
+    ],
+    answer: 0,
+    explanation: "Κανόνας Serialization: Inspector (Αρχείο Σκηνής) > Αρχικές τιμές στον κώδικα C#."
+  },
+  {
+    question: "Ποιο πλήκτρο στο πληκτρολόγιο χρησιμοποιούμε για γρήγορη μετονομασία (Rename) ενός επιλεγμένου αντικειμένου;",
+    choices: [
+      "F2",
+      "F1",
+      "F5",
+      "Tab"
+    ],
+    answer: 0,
+    explanation: "Πατώντας F2 πάνω σε ένα επιλεγμένο GameObject στο Hierarchy ή στο Project, ανοίγει το πεδίο μετονομασίας."
+  },
+  {
+    question: "Σε ένα 2D Top-Down παιχνίδι, σε ποια τιμή θέτουμε το Gravity Scale του Rigidbody2D ώστε ο παίκτης να μην πέφτει κάτω;",
+    choices: [
+      "0",
+      "1",
+      "9.81",
+      "-1"
+    ],
+    answer: 0,
+    explanation: "Με Gravity Scale = 0 απενεργοποιείται η επίδραση της κατακόρυφης βαρύτητας στο συγκεκριμένο σώμα."
+  }
+];
+
+function buildQuizUI() {
+  const container = document.getElementById("questions-list");
+  if (!container) return;
+  container.innerHTML = "";
+
+  quizQuestions.forEach((item, qIndex) => {
+    const card = document.createElement("div");
+    card.className = "question-card";
+    card.id = "card-" + qIndex;
+
+    const title = document.createElement("div");
+    title.className = "question-title";
+    title.innerHTML = '<span class="q-badge">Ερ. ' + (qIndex + 1) + '</span> <span>' + item.question + '</span>';
+    card.appendChild(title);
+
+    const group = document.createElement("div");
+    group.className = "options-group";
+
+    item.choices.forEach((choiceText, optIndex) => {
+      const label = document.createElement("label");
+      label.className = "opt-label";
+      label.id = "lbl-" + qIndex + "-" + optIndex;
+
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "question_" + qIndex;
+      radio.value = optIndex;
+
+      label.appendChild(radio);
+      label.appendChild(document.createTextNode(choiceText));
+      group.appendChild(label);
+    });
+
+    card.appendChild(group);
+
+    const exp = document.createElement("div");
+    exp.className = "explanation";
+    exp.id = "exp-" + qIndex;
+    exp.innerHTML = "<strong>Σωστή Απάντηση / Επεξήγηση:</strong> " + item.explanation;
+    card.appendChild(exp);
+
+    container.appendChild(card);
+  });
+}
+
+function gradeQuiz() {
+  let score = 0;
+
+  quizQuestions.forEach((item, qIndex) => {
+    const card = document.getElementById("card-" + qIndex);
+    const exp = document.getElementById("exp-" + qIndex);
+    const selected = document.querySelector('input[name="question_' + qIndex + '"]:checked');
+
+    card.classList.remove("is-correct-card", "is-wrong-card");
+    item.choices.forEach((_, optIndex) => {
+      const lbl = document.getElementById("lbl-" + qIndex + "-" + optIndex);
+      lbl.classList.remove("opt-correct-highlight", "opt-wrong-highlight");
+    });
+
+    // Επισημαίνουμε πάντα τη σωστή επιλογή με πράσινο
+    const correctLabel = document.getElementById("lbl-" + qIndex + "-" + item.answer);
+    correctLabel.classList.add("opt-correct-highlight");
+
+    if (selected) {
+      const chosen = parseInt(selected.value, 10);
+      if (chosen === item.answer) {
+        score++;
+        card.classList.add("is-correct-card");
+      } else {
+        card.classList.add("is-wrong-card");
+        const chosenLabel = document.getElementById("lbl-" + qIndex + "-" + chosen);
+        chosenLabel.classList.add("opt-wrong-highlight");
+      }
+    } else {
+      card.classList.add("is-wrong-card");
+    }
+
+    exp.style.display = "block";
+  });
+
+  const banner = document.getElementById("score-box");
+  const scoreText = document.getElementById("score-text");
+  const scoreDesc = document.getElementById("score-desc");
+
+  banner.style.display = "block";
+  scoreText.textContent = score + " / " + quizQuestions.length;
+
+  const pct = Math.round((score / quizQuestions.length) * 100);
+  if (pct === 100) {
+    scoreDesc.textContent = "Άριστα! (100%) Όλες οι απαντήσεις είναι σωστές!";
+  } else if (pct >= 80) {
+    scoreDesc.textContent = "Πολύ καλά! (" + pct + "%) Πολύ καλή γνώση των βασικών εργαστηρίων.";
+  } else if (pct >= 50) {
+    scoreDesc.textContent = "Καλή προσπάθεια (" + pct + "%). Δείτε τις επεξηγήσεις στις ερωτήσεις που χάθηκαν.";
+  } else {
+    scoreDesc.textContent = "Χρειάζεται επανάληψη στις σημειώσεις (" + pct + "%).";
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function resetForm() {
+  document.getElementById("quiz-form").reset();
+  const banner = document.getElementById("score-box");
+  banner.style.display = "none";
+
+  quizQuestions.forEach((item, qIndex) => {
+    const card = document.getElementById("card-" + qIndex);
+    const exp = document.getElementById("exp-" + qIndex);
+    card.classList.remove("is-correct-card", "is-wrong-card");
+    exp.style.display = "none";
+
+    item.choices.forEach((_, optIndex) => {
+      const lbl = document.getElementById("lbl-" + qIndex + "-" + optIndex);
+      lbl.classList.remove("opt-correct-highlight", "opt-wrong-highlight");
+    });
+  });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// Εκκίνηση με τη φόρτωση της σελίδας
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", buildQuizUI);
+} else {
+  buildQuizUI();
+}
+</script>
+</body>
+</html>
